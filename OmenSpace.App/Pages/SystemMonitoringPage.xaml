@@ -1,0 +1,251 @@
+<Page
+    x:Class="OmenSpace_App.Pages.SystemMonitoringPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:lvc="using:LiveChartsCore.SkiaSharpView.WinUI"
+    mc:Ignorable="d"
+    Background="Transparent">
+    <Page.Resources>
+        <Style x:Key="MetricCardStyle" TargetType="Border">
+            <Setter Property="Background" Value="{ThemeResource OmenCardBackgroundDarkBrush}"/>
+            <Setter Property="BorderBrush" Value="{ThemeResource OmenCardBorderDarkBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="20"/>
+        </Style>
+    </Page.Resources>
+
+    <Grid Background="{ThemeResource OmenAppBackgroundBrush}" Padding="32,24,32,24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        
+        <!-- Header -->
+        <TextBlock Text="System Monitoring" FontSize="20" FontWeight="Bold" Foreground="{ThemeResource OmenPrimaryTextBrush}" Margin="0,0,0,24"/>
+
+        <!-- Dashboard Layout -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="16">
+                <!-- Top Row: Graphs -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="16"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- CPU Graph -->
+                    <Border Grid.Column="0" Style="{StaticResource MetricCardStyle}" Height="220">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock Text="CPU WATTAGE" FontSize="12" FontWeight="Bold" Foreground="{ThemeResource OmenTertiaryTextBrush}"/>
+                            <TextBlock Text="65W" FontSize="10" Foreground="{ThemeResource OmenMutedTextBrush}" Margin="0,4,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Grid.Row="1"/>
+                            
+                            <!-- Real Graph -->
+                            <lvc:CartesianChart Grid.Row="1" Margin="0,15,0,0"
+                                                Series="{x:Bind ViewModel.CpuSeries}"
+                                                XAxes="{x:Bind ViewModel.XAxes}"
+                                                YAxes="{x:Bind ViewModel.YAxes}"
+                                                TooltipPosition="Hidden" />
+                                                
+                            <TextBlock Text="{x:Bind ViewModel.CpuCurrentWattageText, Mode=OneWay}" FontSize="12" Foreground="{ThemeResource OmenPrimaryTextBrush}" Grid.Row="2" HorizontalAlignment="Right" FontWeight="SemiBold"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- GPU Graph -->
+                    <Border Grid.Column="2" Style="{StaticResource MetricCardStyle}" Height="220">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock Text="GPU WATTAGE" FontSize="12" FontWeight="Bold" Foreground="{ThemeResource OmenTertiaryTextBrush}"/>
+                            <TextBlock Text="80W" FontSize="10" Foreground="{ThemeResource OmenMutedTextBrush}" Margin="0,4,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Grid.Row="1"/>
+                            
+                            <!-- Real Graph -->
+                            <lvc:CartesianChart Grid.Row="1" Margin="0,15,0,0"
+                                                Series="{x:Bind ViewModel.GpuSeries}"
+                                                XAxes="{x:Bind ViewModel.XAxes}"
+                                                YAxes="{x:Bind ViewModel.YAxes}"
+                                                TooltipPosition="Hidden" />
+                                                
+                            <TextBlock Text="{x:Bind ViewModel.GpuCurrentWattageText, Mode=OneWay}" FontSize="12" Foreground="{ThemeResource OmenPrimaryTextBrush}" Grid.Row="2" HorizontalAlignment="Right" FontWeight="SemiBold"/>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <!-- Middle Row: Cards -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="16"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="16"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- CPU Card -->
+                    <Border Grid.Column="0" Style="{StaticResource MetricCardStyle}">
+                        <StackPanel Spacing="16">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <FontIcon Glyph="&#xE9D2;" FontSize="14" Foreground="#EF4444" Margin="0,0,8,0"/>
+                                <TextBlock Grid.Column="1" Text="CPU" FontSize="14" FontWeight="Bold" Foreground="{ThemeResource OmenPrimaryTextBrush}"/>
+                                <TextBlock Grid.Column="2" Text="41°C" FontSize="18" FontWeight="Bold" Foreground="{ThemeResource OmenPrimaryTextBrush}"/>
+                            </Grid>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="TEMP" FontSize="10" Foreground="{ThemeResource OmenTertiaryTextBrush}"/>
+                                <TextBlock Grid.Column="1" Text="LOAD 5%" FontSize="10" Foreground="{ThemeResource OmenTertiaryTextBrush}"/>
+                            </Grid>
+                            <ProgressBar Value="5" Maximum="100" Height="4" Foreground="#EF4444" Background="{ThemeResource OmenCardBorderBaseBrush}"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" HorizontalAlignment="Center">
+                                    <TextBlock Text="PWR" FontSize="10" Foreground="{ThemeResource OmenTertiaryTextBrush}" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="7.2W" FontSize="14" FontWeight="Bold" Foreground="{ThemeResource OmenPrimaryTextBrush}" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" HorizontalAlignment="Center">
+                                    <TextBlock Text="FAN" FontSize="10" Foreground="{ThemeResource OmenTertiaryTextBrush}" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="2100 RPM" FontSize="14" FontWeight="Bold" Foreground="{ThemeResource OmenPrimaryTextBrush}" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- GPU Card -->
+                    <Border Grid.Column="2" Style="{StaticResource MetricCardStyle}">
+                        <StackPanel Spacing="16">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <FontIcon Glyph="&#xE97B;" FontSize="14" Foreground="#3B82F6" Margin="0,0,8,0"/>
+                                <TextBlock Grid.Column="1" Text="GPU" FontSize="14" FontWeight="Bold" Foreground="{ThemeResource OmenPrimaryTextBrush}"/>
+                                <TextBlock Grid.Column="2" Text="37°C" FontSize="18" FontWeight="Bold" Foreground="{ThemeResource OmenPrimaryTextBrush}"/>
+                            </Grid>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="TEMP" FontSize="10" Foreground="{ThemeResource OmenTertiaryTextBrush}"/>
+                                <TextBlock Grid.Column="1" Text="LOAD 0%" FontSize="10" Foreground="{ThemeResource OmenTertiaryTextBrush}"/>
+                            </Grid>
+                            <ProgressBar Value="0" Maximum="100" Height="4" Foreground="#3B82F6" Background="{ThemeResource OmenCardBorderBaseBrush}"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" HorizontalAlignment="Center">
+                                    <TextBlock Text="PWR" FontSize="10" Foreground="{ThemeResource OmenTertiaryTextBrush}" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="2.4W" FontSize="14" FontWeight="Bold" Foreground="{ThemeResource OmenPrimaryTextBrush}" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" HorizontalAlignment="Center">
+                                    <TextBlock Text="FAN" FontSize="10" Foreground="{ThemeResource OmenTertiaryTextBrush}" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="2100 RPM" FontSize="14" FontWeight="Bold" Foreground="{ThemeResource OmenPrimaryTextBrush}" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Device Status Card -->
+                    <Border Grid.Column="4" Style="{StaticResource MetricCardStyle}">
+                        <StackPanel Spacing="12">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE9F9;" FontSize="14" Foreground="{ThemeResource OmenSecondaryTextBrush}"/>
+                                <TextBlock Text="Device Status" FontSize="13" FontWeight="Bold" Foreground="{ThemeResource OmenPrimaryTextBrush}"/>
+                            </StackPanel>
+                            
+                            <!-- RAM -->
+                            <StackPanel Spacing="4" Margin="0,8,0,0">
+                                <Grid>
+                                    <TextBlock Text="RAM" FontSize="10" Foreground="{ThemeResource OmenTertiaryTextBrush}"/>
+                                    <TextBlock Text="15 GB DDR" FontSize="10" Foreground="{ThemeResource OmenSecondaryTextBrush}" HorizontalAlignment="Right"/>
+                                </Grid>
+                                <ProgressBar Value="30" Maximum="100" Height="4" Foreground="#A855F7" Background="{ThemeResource OmenCardBorderBaseBrush}"/>
+                                <TextBlock Text="4.4 / 15.3 GB" FontSize="10" Foreground="{ThemeResource OmenTertiaryTextBrush}" HorizontalAlignment="Right"/>
+                            </StackPanel>
+
+                            <!-- SSD -->
+                            <StackPanel Spacing="4" Margin="0,8,0,0">
+                                <Grid>
+                                    <TextBlock Text="SSD" FontSize="10" Foreground="{ThemeResource OmenTertiaryTextBrush}"/>
+                                    <TextBlock Text="WD PC SN810" FontSize="10" Foreground="{ThemeResource OmenSecondaryTextBrush}" HorizontalAlignment="Right"/>
+                                </Grid>
+                                <ProgressBar Value="30" Maximum="100" Height="4" Foreground="#F97316" Background="{ThemeResource OmenCardBorderBaseBrush}"/>
+                                <TextBlock Text="17 / 57 GB" FontSize="10" Foreground="{ThemeResource OmenTertiaryTextBrush}" HorizontalAlignment="Right"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <!-- Bottom Row: Modes and Total Power -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="16"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0" Style="{StaticResource MetricCardStyle}">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE9D2;" FontSize="14" Foreground="{ThemeResource OmenSecondaryTextBrush}"/>
+                                <TextBlock Text="TOTAL POWER" FontSize="13" FontWeight="Bold" Foreground="{ThemeResource OmenPrimaryTextBrush}"/>
+                            </StackPanel>
+                            <TextBlock Text="16.0 W" FontSize="36" FontWeight="Bold" Foreground="{ThemeResource OmenPrimaryTextBrush}" HorizontalAlignment="Center" Margin="0,24,0,0"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Column="2" Style="{StaticResource MetricCardStyle}">
+                        <StackPanel Spacing="16">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE713;" FontSize="14" Foreground="{ThemeResource OmenSecondaryTextBrush}"/>
+                                <TextBlock Text="SYSTEM MODES" FontSize="13" FontWeight="Bold" Foreground="{ThemeResource OmenPrimaryTextBrush}"/>
+                            </StackPanel>
+                            <Grid Margin="0,12,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="MODE" FontSize="11" Foreground="{ThemeResource OmenTertiaryTextBrush}"/>
+                                <TextBlock Grid.Column="1" Text="Balanced" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource OmenPrimaryTextBrush}"/>
+                            </Grid>
+                            <Border Height="1" Background="{ThemeResource OmenCardBorderBaseBrush}"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="FAN" FontSize="11" Foreground="{ThemeResource OmenTertiaryTextBrush}"/>
+                                <TextBlock Grid.Column="1" Text="Auto" FontSize="12" FontWeight="SemiBold" Foreground="{ThemeResource OmenPrimaryTextBrush}"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Page>

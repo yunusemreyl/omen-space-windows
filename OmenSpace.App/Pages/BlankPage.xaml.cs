@@ -1,0 +1,1 @@
+namespace OmenSpace_App.Pages { public sealed partial class BlankPage : Microsoft.UI.Xaml.Controls.Page { public BlankPage() { this.InitializeComponent(); } } }

@@ -1,0 +1,26 @@
+OnLaunched Crash:
+Microsoft.UI.Xaml.Markup.XamlParseException: Bu hata koduyla ilişkili metin bulunamadı.
+
+Failed to create a 'Windows.Foundation.Boolean' from the text 'Collapsed'. [Line: 26 Position: 13]
+   at WinRT.ExceptionHelpers.<ThrowExceptionForHR>g__Throw|38_0(Int32 hr)
+   at WinRT.ExceptionHelpers.ThrowExceptionForHR(Int32 hr)
+   at ABI.Microsoft.UI.Xaml.IApplicationStaticsMethods.LoadComponent(IObjectReference _obj, Object component, Uri resourceLocator, ComponentResourceLocation componentResourceLocation)
+   at Microsoft.UI.Xaml.Application.LoadComponent(Object component, Uri resourceLocator, ComponentResourceLocation componentResourceLocation)
+   at OmenSpace_App.MainWindow.InitializeComponent() in C:\Users\victus\Documents\omen-space-windows\OmenSpace.App\obj\Debug\net10.0-windows10.0.26100.0\win-x64\MainWindow.g.i.cs:line 45
+   at OmenSpace_App.MainWindow..ctor(String initialPage) in C:\Users\victus\Documents\omen-space-windows\OmenSpace.App\MainWindow.xaml.cs:line 22
+   at OmenSpace_App.App.OnLaunched(LaunchActivatedEventArgs args) in C:\Users\victus\Documents\omen-space-windows\OmenSpace.App\App.xaml.cs:line 68
+Bu hata koduyla ilişkili metin bulunamadı.
+
+Failed to create a 'Windows.Foundation.Boolean' from the text 'Collapsed'. [Line: 26 Position: 13]Unhandled XAML: Microsoft.UI.Xaml.Markup.XamlParseException: Bu hata koduyla ilişkili metin bulunamadı.
+
+Failed to create a 'Windows.Foundation.Boolean' from the text 'Collapsed'. [Line: 26 Position: 13]
+   at WinRT.ExceptionHelpers.<ThrowExceptionForHR>g__Throw|38_0(Int32 hr)
+   at WinRT.ExceptionHelpers.ThrowExceptionForHR(Int32 hr)
+   at ABI.Microsoft.UI.Xaml.IApplicationStaticsMethods.LoadComponent(IObjectReference _obj, Object component, Uri resourceLocator, ComponentResourceLocation componentResourceLocation)
+   at Microsoft.UI.Xaml.Application.LoadComponent(Object component, Uri resourceLocator, ComponentResourceLocation componentResourceLocation)
+   at OmenSpace_App.MainWindow.InitializeComponent() in C:\Users\victus\Documents\omen-space-windows\OmenSpace.App\obj\Debug\net10.0-windows10.0.26100.0\win-x64\MainWindow.g.i.cs:line 45
+   at OmenSpace_App.MainWindow..ctor(String initialPage) in C:\Users\victus\Documents\omen-space-windows\OmenSpace.App\MainWindow.xaml.cs:line 22
+   at OmenSpace_App.App.OnLaunched(LaunchActivatedEventArgs args) in C:\Users\victus\Documents\omen-space-windows\OmenSpace.App\App.xaml.cs:line 68
+   at Microsoft.UI.Xaml.Application.Microsoft.UI.Xaml.IApplicationOverrides.OnLaunched(LaunchActivatedEventArgs args)
+   at ABI.Microsoft.UI.Xaml.IApplicationOverrides.Do_Abi_OnLaunched_0(IntPtr thisPtr, IntPtr args)
+Failed to create a 'Windows.Foundation.Boolean' from the text 'Collapsed'. [Line: 26 Position: 13]
