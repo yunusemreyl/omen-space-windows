@@ -48,8 +48,8 @@
 This project stands on the shoulders of giants. We express our deepest gratitude to the creators, reverse-engineers, and contributors of the following open-source projects for making this possible:
 
 *   **[omenmon](https://github.com/OmenMon/OmenMon)** - For pioneering the research into HP's WMI and EC (Embedded Controller) fan control interfaces.
-*   **[omenmon-reborn](https://github.com/Sardine033/OmenMon-Reborn)** - For keeping the legacy alive and continually expanding the list of supported devices.
-*   **[omencore](https://github.com/determ1ne/omencore)** (and the Linux `omen-space` project) - For their incredibly comprehensive hardware capability databases, which served as the foundation for OmenSpace's modern device recognition and LampArray implementations.
+*   **[omenmon-reborn](https://github.com/seakyy/OmenMon-Reborn)** - For keeping the legacy alive and continually expanding the list of supported devices.
+*   **[omencore]([https://github.com/thea-/omencore](https://github.com/theantipopau/omencore))** (and the Linux `omen-space` project) - For their incredibly comprehensive hardware capability databases, which served as the foundation for OmenSpace's modern device recognition and LampArray implementations.
 
 ## 📜 License
 This project is open-source. (See LICENSE for more details).
