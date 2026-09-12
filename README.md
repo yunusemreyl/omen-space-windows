@@ -1,5 +1,6 @@
 ﻿<div align="center">
   <h1>OmenSpace for Windows</h1>
+  <img src="images/omenspace.png" >
   <p>A lightweight, modern, and open-source control center for HP OMEN and Victus laptops.</p>
 </div>
 
@@ -17,9 +18,9 @@
 
 ## 📸 Screenshots
 
-| Dashboard | Performance & Custom Fan Curves |
+| Performance & Custom Fan Curves |
 |:---:|:---:|
-| <img src="images/omenspace.png" alt="OmenSpace Dashboard" /> | <img src="images/perf.png" alt="Performance Tab" /> |
+| <img src="images/perf.png" alt="Performance Tab" /> |
 | **GPU Mode** | **Lighting Settings** |
 | <img src="images/mux.png" alt="GPU MUX Switch" /> | <img src="images/light.png" alt="Lighting Configuration" /> |
 
