@@ -1,5 +1,5 @@
 ﻿<div align="center">
-  <h1>OmenSpace for Windows</h1>
+  <h1>OMEN Space for Windows</h1>
   <p>A lightweight, modern, and open-source control center for HP OMEN and Victus laptops.</p>
 </div>
 
