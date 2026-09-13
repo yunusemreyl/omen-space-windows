@@ -1,6 +1,6 @@
 namespace OmenSpace.Core.Models;
 
-public enum GpuMode { Hybrid = 0, Discrete = 1, Optimus = 2 }
+public enum GpuMode { Hybrid = 0, Discrete = 1, AdvancedOptimus = 2 }
 public enum GpuPowerLevel { BasePower = 0, ExtraPower = 1, MaxPower = 2 }
 public enum KeyboardType { Unknown = 0, Standard = 1, FourZoneRgb = 4, PerKeyRgb = 5 }
 public enum FanRpmState { Unknown = 0, Stable = 1, TransitionHold = 2, Unavailable = 3, IdleStopped = 4 }

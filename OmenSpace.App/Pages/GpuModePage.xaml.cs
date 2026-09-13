@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Management;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -18,6 +19,8 @@ public sealed partial class GpuModePage : Page
         this.Unloaded += GraphicsSwitcherPage_Unloaded;
         this.Loaded += GraphicsSwitcherPage_Loaded;
     }
+
+    private bool _advancedOptimusSupported = false;
 
     private void GraphicsSwitcherPage_Loaded(object sender, RoutedEventArgs e)
     {
@@ -63,6 +66,49 @@ public sealed partial class GpuModePage : Page
         {
             // Ignore WMI errors
         }
+
+        // Advanced Optimus capability detection
+        _ = Task.Run(async () =>
+        {
+            bool supported = false;
+            try
+            {
+                string? resultJson = await App.IpcClient.SendCommandWithResultAsync("GetAdvancedOptimusSupport", null);
+                if (resultJson != null)
+                {
+                    using var doc = JsonDocument.Parse(resultJson);
+                    if (doc.RootElement.TryGetProperty("Supported", out var s))
+                        supported = s.GetBoolean();
+                }
+            }
+            catch { }
+
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                _advancedOptimusSupported = supported;
+
+                // Enable/disable the Advanced Optimus ComboBox item
+                if (CmbItemAdvancedOptimus != null)
+                    CmbItemAdvancedOptimus.IsEnabled = supported;
+
+                // Update support badge
+                if (AdvancedOptimusDot != null && AdvancedOptimusStatusText != null)
+                {
+                    if (supported)
+                    {
+                        AdvancedOptimusDot.Fill = new Microsoft.UI.Xaml.Media.SolidColorBrush(
+                            Windows.UI.Color.FromArgb(255, 16, 185, 129)); // green
+                        AdvancedOptimusStatusText.Text = "Supported";
+                    }
+                    else
+                    {
+                        AdvancedOptimusDot.Fill = new Microsoft.UI.Xaml.Media.SolidColorBrush(
+                            Microsoft.UI.Colors.Gray);
+                        AdvancedOptimusStatusText.Text = "Not Supported";
+                    }
+                }
+            });
+        });
     }
 
     private void GraphicsSwitcherPage_Unloaded(object sender, RoutedEventArgs e)
@@ -90,13 +136,18 @@ public sealed partial class GpuModePage : Page
 
                 if (_isSwitching) return; // Kullanıcı seçim yaparken arayüzü telemetri ile ezme
                 int currentMode = _pendingGpuMode.HasValue ? _pendingGpuMode.Value : e.GpuMode;
-                // GpuMode 0 = Hybrid, 1 = Dedicated/Discrete, 2 = Optimus
-                if (BtnMuxHybrid != null) BtnMuxHybrid.IsChecked = (currentMode == 0 || currentMode == 2);
+                // GpuMode 0 = Hybrid, 1 = Dedicated/Discrete, 2 = AdvancedOptimus
+                if (BtnMuxHybrid != null) BtnMuxHybrid.IsChecked = (currentMode == 0);
                 if (BtnMuxDiscrete != null) BtnMuxDiscrete.IsChecked = (currentMode == 1);
                 
                 if (CmbGpuMode != null)
                 {
-                    CmbGpuMode.SelectedIndex = (currentMode == 1) ? 1 : 0;
+                    CmbGpuMode.SelectedIndex = currentMode switch
+                    {
+                        1 => 1,
+                        2 => 2,
+                        _ => 0
+                    };
                 }
 
                 if (DiscreteGpuStatusDot != null && DiscreteGpuStatusText != null)
@@ -214,6 +265,23 @@ public sealed partial class GpuModePage : Page
     {
         try
         {
+            // Advanced Optimus (mode 2) does NOT require a reboot
+            bool isAdvancedOptimus = (newMode == 2);
+
+            if (isAdvancedOptimus)
+            {
+                var infoDialog = new ContentDialog
+                {
+                    Title = "Advanced Optimus Activated",
+                    Content = "NVIDIA Dynamic Display Switching is now active. The GPU will switch automatically between Hybrid and Discrete modes per application — no reboot required.",
+                    CloseButtonText = "OK",
+                    XamlRoot = this.XamlRoot,
+                    RequestedTheme = ElementTheme.Default
+                };
+                await infoDialog.ShowAsync();
+                return;
+            }
+
             var dialog = new ContentDialog
             {
                 Title = "Yeniden Başlatma Gerekli",
@@ -241,8 +309,39 @@ public sealed partial class GpuModePage : Page
         if (_updatingFromTelemetry) return;
         if (!this.IsLoaded) return;
         
-        if (CmbGpuMode.SelectedIndex == 0) { if (BtnMuxHybrid != null) BtnMuxHybrid.IsChecked = true; MuxMode_Click(BtnMuxHybrid, null); }
+        if (CmbGpuMode.SelectedIndex == 0)      { if (BtnMuxHybrid != null) BtnMuxHybrid.IsChecked = true; MuxMode_Click(BtnMuxHybrid, null); }
         else if (CmbGpuMode.SelectedIndex == 1) { if (BtnMuxDiscrete != null) BtnMuxDiscrete.IsChecked = true; MuxMode_Click(BtnMuxDiscrete, null); }
+        else if (CmbGpuMode.SelectedIndex == 2) { AdvancedOptimus_Click(); } // Advanced Optimus
+    }
+
+    private async void AdvancedOptimus_Click()
+    {
+        if (_isSwitching) return;
+        _isSwitching = true;
+        try
+        {
+            _pendingGpuMode = 2; // AdvancedOptimus
+
+            if (App.IpcClient != null)
+            {
+                bool sent = await App.IpcClient.SendCommandAsync("SetGpuMode", 2);
+                if (!sent)
+                {
+                    _pendingGpuMode = null;
+                    // Rollback to Hybrid
+                    if (CmbGpuMode != null) CmbGpuMode.SelectedIndex = 0;
+                    await ShowCommandFailedDialogAsync("Advanced Optimus etkinleştirilemedi", "Worker servisine erişilemedi.");
+                    return;
+                }
+
+                // Advanced Optimus does NOT require a reboot
+                await ShowMuxToastNotificationAsync(0, 2);
+            }
+        }
+        finally
+        {
+            _isSwitching = false;
+        }
     }
 
     private void BtnOpenNvidia_Click(object sender, RoutedEventArgs e)

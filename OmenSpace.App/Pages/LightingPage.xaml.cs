@@ -29,6 +29,11 @@ public sealed partial class LightingPage : Page
     {
         this.InitializeComponent();
 
+        if (Visualizer != null)
+        {
+            Visualizer.ZoneClicked += Visualizer_ZoneClicked;
+        }
+
         _colorUpdateTimer = new DispatcherTimer { Interval = System.TimeSpan.FromMilliseconds(100) };
         _colorUpdateTimer.Tick += (s, e) =>
         {
@@ -55,7 +60,8 @@ public sealed partial class LightingPage : Page
         {
             using var key = Registry.LocalMachine.OpenSubKey(@"HARDWARE\DESCRIPTION\System\BIOS");
             string productName = key?.GetValue("SystemProductName")?.ToString() ?? "";
-            detectedIsOmen = !productName.Contains("Victus", System.StringComparison.OrdinalIgnoreCase);
+            // We force 4-zone UI for testing purposes even on Victus
+            detectedIsOmen = true; // !productName.Contains("Victus", System.StringComparison.OrdinalIgnoreCase);
         }
         catch
         {
@@ -71,15 +77,19 @@ public sealed partial class LightingPage : Page
             {
                 SingleZoneGlow.Visibility = Visibility.Collapsed;
                 MultiZoneGlow.Visibility = Visibility.Visible;
-                ZoneClickOverlay.Visibility = Visibility.Visible;
                 SelectedZoneText.Visibility = Visibility.Visible;
             }
             else
             {
                 SingleZoneGlow.Visibility = Visibility.Visible;
                 MultiZoneGlow.Visibility = Visibility.Collapsed;
-                ZoneClickOverlay.Visibility = Visibility.Collapsed;
                 SelectedZoneText.Visibility = Visibility.Collapsed;
+            }
+
+            // Always show the visualizer
+            if (Visualizer != null)
+            {
+                Visualizer.Visibility = Visibility.Visible;
             }
 
             // Initialize Color Picker now that we know the layout
@@ -88,6 +98,14 @@ public sealed partial class LightingPage : Page
                 _isSyncingFromServer = true;
                 ZoneColorPicker.Color = isOmen ? zoneColors[0] : singleZoneColor;
                 _isSyncingFromServer = false;
+            }
+
+            // Force visualizer to draw initial colors
+            if (isOmen) {
+                Visualizer?.UpdateZoneColors(zoneColors);
+            } else {
+                Color c = singleZoneColor;
+                Visualizer?.UpdateZoneColors(new Color[] { c, c, c, c });
             }
         });
     }
@@ -117,12 +135,14 @@ public sealed partial class LightingPage : Page
                             ApplyColorStopsOnly(zoneColors[1], 1);
                             ApplyColorStopsOnly(zoneColors[2], 2);
                             ApplyColorStopsOnly(zoneColors[3], 3);
+                            Visualizer?.UpdateZoneColors(zoneColors);
                         }
                         else
                         {
                             singleZoneColor = Color.FromArgb(255, zones[0], zones[1], zones[2]);
                             if (ZoneColorPicker != null) ZoneColorPicker.Color = singleZoneColor;
                             ApplyColorStopsOnly(singleZoneColor, 0);
+                            Visualizer?.UpdateZoneColors(new Color[] { singleZoneColor, singleZoneColor, singleZoneColor, singleZoneColor });
                         }
                         if (BrightnessSlider != null)
                         {
@@ -160,30 +180,21 @@ public sealed partial class LightingPage : Page
     }
 
 
-    private void Zone_Tapped(object sender, Microsoft.UI.Xaml.Input.TappedRoutedEventArgs e)
+    private void Visualizer_ZoneClicked(object sender, int zoneIndex)
     {
-        if (sender is Border border && int.TryParse(border.Tag.ToString(), out int zoneIndex))
-        {
-            // Reset borders
-            Zone0Overlay.BorderBrush = new Microsoft.UI.Xaml.Media.SolidColorBrush(Colors.Transparent);
-            Zone1Overlay.BorderBrush = new Microsoft.UI.Xaml.Media.SolidColorBrush(Colors.Transparent);
-            Zone2Overlay.BorderBrush = new Microsoft.UI.Xaml.Media.SolidColorBrush(Colors.Transparent);
-            Zone3Overlay.BorderBrush = new Microsoft.UI.Xaml.Media.SolidColorBrush(Colors.Transparent);
+        currentZone = zoneIndex;
+        
+        // Update Visualizer Selection
+        if (Visualizer != null) Visualizer.SelectedZone = zoneIndex;
 
-            // Highlight selected
-            border.BorderBrush = new Microsoft.UI.Xaml.Media.SolidColorBrush(Colors.White);
+        // Update Text
+        string zoneName = zoneIndex switch { 0 => "Right", 1 => "Center-Right", 2 => "Center-Left", _ => "Left" };
+        SelectedZoneText.Text = $"Selected Zone: {zoneIndex + 1} ({zoneName})";
 
-            currentZone = zoneIndex;
-            
-            // Update Text
-            string zoneName = zoneIndex switch { 0 => "Left", 1 => "Center-Left", 2 => "Center-Right", _ => "Right" };
-            SelectedZoneText.Text = $"Selected Zone: {zoneIndex + 1} ({zoneName})";
-
-            // Update Color Picker without triggering ColorChanged on the other zones
-            _isSyncingFromServer = true;
-            if (ZoneColorPicker != null) ZoneColorPicker.Color = zoneColors[zoneIndex];
-            _isSyncingFromServer = false;
-        }
+        // Update Color Picker without triggering ColorChanged on the other zones
+        _isSyncingFromServer = true;
+        if (ZoneColorPicker != null) ZoneColorPicker.Color = zoneColors[zoneIndex];
+        _isSyncingFromServer = false;
     }
 
     private void PresetColor_Click(object sender, RoutedEventArgs e)
@@ -220,11 +231,13 @@ public sealed partial class LightingPage : Page
                 case 3:
                     Mz3Stop1.Color = c20; Mz3Stop2.Color = c70; Mz3Stop3.Color = c00; break;
             }
+            Visualizer?.UpdateZoneColors(zoneColors);
         }
         else
         {
             singleZoneColor = c;
             SzStop1.Color = c20; SzStop2.Color = c70; SzStop3.Color = c00;
+            Visualizer?.UpdateZoneColors(new Color[] { c, c, c, c });
         }
 
         _colorUpdateTimer?.Stop();
@@ -241,6 +254,23 @@ public sealed partial class LightingPage : Page
         if (_isSyncingFromServer) return;
         _colorUpdateTimer?.Stop();
         _colorUpdateTimer?.Start();
+    }
+
+    private async void DynamicLightingToggle_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (_isSyncingFromServer) return;
+        bool isOn = DynamicLightingToggle.IsOn;
+        
+        if (EffectSettingsPanel != null)
+        {
+            EffectSettingsPanel.Opacity = isOn ? 0.3 : 1.0;
+            EffectSettingsPanel.IsHitTestVisible = !isOn;
+        }
+        
+        if (App.IpcClient != null)
+        {
+            await App.IpcClient.SendCommandAsync("SetDynamicLightingControl", isOn);
+        }
     }
 
     private void BrightnessSlider_ValueChanged(object sender, Microsoft.UI.Xaml.Controls.Primitives.RangeBaseValueChangedEventArgs e)
@@ -278,11 +308,14 @@ public sealed partial class LightingPage : Page
 
         if (effectName == "static")
         {
-            await App.IpcClient.SendCommandAsync("SetLighting", new { BacklightOn = brightness > 0, ZoneColors = base64 });
+            string on = (brightness > 0).ToString().ToLower();
+            string payload = $"{{\"BacklightOn\":{on},\"ZoneColors\":\"{base64}\"}}";
+            await App.IpcClient.SendCommandRawJsonAsync("SetLighting", payload);
         }
         else
         {
-            await App.IpcClient.SendCommandAsync("SetLightingEffect", new { Effect = effectName, Speed = speedPct, Brightness = brightness, ZoneColors = base64 });
+            string payload = $"{{\"Effect\":\"{effectName}\",\"Speed\":{speedPct},\"Brightness\":{brightness},\"ZoneColors\":\"{base64}\"}}";
+            await App.IpcClient.SendCommandRawJsonAsync("SetLightingEffect", payload);
         }
     }
 

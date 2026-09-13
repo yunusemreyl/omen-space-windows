@@ -34,20 +34,34 @@ public class TelemetryData
     public bool  CpuTurboEnabled { get; set; } = true;
 }
 
+public class CommandRequest
+{
+    public string Command { get; set; } = "";
+    public string Value { get; set; } = "";
+}
+
+[System.Text.Json.Serialization.JsonSourceGenerationOptions(PropertyNameCaseInsensitive = true)]
+[System.Text.Json.Serialization.JsonSerializable(typeof(TelemetryData))]
+[System.Text.Json.Serialization.JsonSerializable(typeof(CommandRequest))]
+internal partial class AppJsonSerializerContext : System.Text.Json.Serialization.JsonSerializerContext
+{
+}
+
 public class IpcClient
 {
     // â”€â”€ Olaylar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ——— Olaylar ————————————————————————————————————————————————
     public event EventHandler<TelemetryData>? TelemetryReceived;
     public event EventHandler? Connected;
     public event EventHandler? Disconnected;
 
-    // â”€â”€ Dahili Durum â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ——— Dahili Durum ———————————————————————————————————————————
     private readonly CancellationTokenSource _cts = new();
-    private readonly HttpClient _httpClient = new() { Timeout = TimeSpan.FromSeconds(3) };
+    private readonly HttpClient _httpClient = new() { Timeout = TimeSpan.FromSeconds(15) };
     private DateTime _lastWorkerStartAttempt = DateTime.MinValue;
     private bool _isConnected = false;
 
-    // Adaptif poll: baÄŸlantÄ± yokken backoff; baÄŸlÄ±yken normal.
+    // Adaptif poll: bağlantı yokken backoff; bağlıyken normal.
     private int _normalPollMs    = 2000;
     private int _backoffPollMs   = 5000;
     private int _maxBackoffMs    = 30_000;
@@ -150,8 +164,7 @@ public class IpcClient
             try
             {
                 string json = await _httpClient.GetStringAsync($"{WorkerUrl}/api/telemetry", ct);
-                var telemetry = JsonSerializer.Deserialize<TelemetryData>(json,
-                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                var telemetry = JsonSerializer.Deserialize(json, AppJsonSerializerContext.Default.TelemetryData);
 
                 if (telemetry != null)
                 {
@@ -216,7 +229,14 @@ public class IpcClient
         try
         {
             await Task.Run(() => EnsureWorkerRunning());
-            var json    = JsonSerializer.Serialize(new { Command = command, Value = value });
+            string valueJson = value switch
+            {
+                null => "null",
+                bool b => b ? "true" : "false",
+                string s => $"\"{s}\"",
+                _ => value.ToString() ?? "null"
+            };
+            var json = $"{{\"Command\":\"{command}\",\"Value\":{valueJson}}}";
             OmenSpace.Core.Services.Logger.LogInfo($"[IpcClient] --> Gonderilen Komut: {command} - Payload: {json}");
             using var content  = new StringContent(json, Encoding.UTF8, "application/json");
             using var response = await _httpClient.PostAsync($"{WorkerUrl}/api/command", content);
@@ -230,12 +250,38 @@ public class IpcClient
         }
     }
 
+    public async Task<bool> SendCommandRawJsonAsync(string command, string rawJson)
+    {
+        try
+        {
+            await Task.Run(() => EnsureWorkerRunning());
+            var json = $"{{\"Command\":\"{command}\",\"Value\":{rawJson}}}";
+            OmenSpace.Core.Services.Logger.LogInfo($"[IpcClient] --> Gonderilen Komut: {command} - Payload: {json}");
+            using var content  = new StringContent(json, Encoding.UTF8, "application/json");
+            using var response = await _httpClient.PostAsync($"{WorkerUrl}/api/command", content);
+            response.EnsureSuccessStatusCode();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            OmenSpace.Core.Services.Logger.LogInfo($"[IpcClient] Komut hatası '{command}': {ex.Message}");
+            return false;
+        }
+    }
+
     public async Task<string?> SendCommandWithResultAsync(string command, object? value = null)
     {
         try
         {
             await Task.Run(() => EnsureWorkerRunning());
-            var json    = JsonSerializer.Serialize(new { Command = command, Value = value });
+            string valueJson = value switch
+            {
+                null => "{}",
+                bool b => b ? "true" : "false",
+                string s => $"\"{s}\"",
+                _ => value.ToString() ?? "{}"
+            };
+            var json = $"{{\"Command\":\"{command}\",\"Value\":{valueJson}}}";
             OmenSpace.Core.Services.Logger.LogInfo($"[IpcClient] --> Gonderilen Komut: {command} - Payload: {json}");
             using var content  = new StringContent(json, Encoding.UTF8, "application/json");
             using var response = await _httpClient.PostAsync($"{WorkerUrl}/api/command", content);

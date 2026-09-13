@@ -33,6 +33,13 @@ public class PerformanceModeService : IPerformanceModeService, IDisposable
     private readonly object _timerLock = new();
     private const int CountdownExtIntervalMs = 30_000; // 30 seconds
 
+    // WMAA abort-prone board detection.
+    // Board 8BCD has field reports of ACPI WMAA/WHCM aborts where WMI-backed fan,
+    // RGB, and battery paths report success without hardware effect.
+    // GPU power coupling is disabled for this board to prevent abort storms.
+    // Source: LinuxCapabilityClassifier.IsWmaaAbortProneBoard (OmenCore 4.2.0)
+    private bool _isWmaaAbortProneBoard;
+
     /// <summary>
     /// When false (default), switching performance modes does NOT write fan policy or GPU power.
     /// Users who manage fan curves or presets manually are unaffected by profile switches.
@@ -47,6 +54,13 @@ public class PerformanceModeService : IPerformanceModeService, IDisposable
         _ecService = ecService;
         _boardConfig = boardConfig;
         _gpuControlService = gpuControlService;
+
+        // Detect WMAA abort-prone boards (field evidence from OmenCore/LinuxCapabilityClassifier)
+        _isWmaaAbortProneBoard = string.Equals(boardConfig.BoardId?.Trim(), "8BCD", System.StringComparison.OrdinalIgnoreCase);
+        if (_isWmaaAbortProneBoard)
+        {
+            OmenSpace.Core.Services.Logger.LogInfo($"[PerformanceMode] Board '8BCD' detected -- GPU power coupling disabled to prevent ACPI WMAA/WHCM abort storm.");
+        }
 
         _ = InitializeCurrentModeAsync();
     }
@@ -150,8 +164,10 @@ public class PerformanceModeService : IPerformanceModeService, IDisposable
             OmenSpace.Core.Services.Logger.LogInfo($"[PerformanceMode] Failed to set Windows Power Plan: {ex.Message}");
         }
 
-        // Apply GPU Dynamic Boost Coupling (OmenCore behavior) — only when linked
-        if (LinkFanToPerformanceMode)
+        // Apply GPU Dynamic Boost Coupling (OmenCore behavior) -- only when linked
+        // Exception: WMAA abort-prone boards (8BCD) skip GPU coupling to prevent abort storms.
+        // Source: LinuxCapabilityClassifier.IsWmaaAbortProneBoard (OmenCore 4.2.0)
+        if (LinkFanToPerformanceMode && !_isWmaaAbortProneBoard)
         {
             GpuPowerLevel gpuPower = mode switch
             {
@@ -162,9 +178,13 @@ public class PerformanceModeService : IPerformanceModeService, IDisposable
             await _gpuControlService.SetGpuPowerAsync(gpuPower, ct);
             OmenSpace.Core.Services.Logger.LogInfo($"[PerformanceMode] GPU Dynamic Boost coupled to: {gpuPower}");
         }
+        else if (_isWmaaAbortProneBoard)
+        {
+            OmenSpace.Core.Services.Logger.LogInfo("[PerformanceMode] GPU power coupling skipped -- WMAA abort-prone board (8BCD).");
+        }
         else
         {
-            OmenSpace.Core.Services.Logger.LogInfo("[PerformanceMode] GPU power not changed — LinkFanToPerformanceMode is off.");
+            OmenSpace.Core.Services.Logger.LogInfo("[PerformanceMode] GPU power not changed -- LinkFanToPerformanceMode is off.");
         }
 
         // Step 4: EC mode byte fallback & Fan Profile Kick Down (0x95 & 0xCE)
@@ -200,12 +220,42 @@ public class PerformanceModeService : IPerformanceModeService, IDisposable
                 try
                 {
                     await _ecService.WriteByteAsync(0xCE, ecValue, ct);
-                    OmenSpace.Core.Services.Logger.LogInfo($"[PerformanceMode] EC 0xCE ← 0x{ecValue:X2} ✓");
+                    OmenSpace.Core.Services.Logger.LogInfo($"[PerformanceMode] EC 0xCE <- 0x{ecValue:X2} OK");
                 }
                 catch (Exception ex)
                 {
                     OmenSpace.Core.Services.Logger.LogInfo($"[PerformanceMode] EC 0xCE write failed: {ex.Message}");
                 }
+            }
+
+            // EC 0x95 write-back verification
+            // Read back the register to confirm the write was effective.
+            // Discrepancy indicates BIOS may have reverted or WMI/EC contention.
+            // Source: LinuxEcController pattern (OmenCore 4.2.0)
+            try
+            {
+                await Task.Delay(50, ct); // Brief settle time
+                byte readBack = await _ecService.ReadByteAsync(0x95, ct);
+                byte expectedByte = mode switch
+                {
+                    ThermalProfile.Default     => 0x00,
+                    ThermalProfile.Performance => 0x01,
+                    ThermalProfile.Quiet       => 0x02,
+                    _                          => 0x00
+                };
+                if (readBack != expectedByte)
+                {
+                    OmenSpace.Core.Services.Logger.LogInfo($"[PerformanceMode] EC 0x95 write-back mismatch: expected 0x{expectedByte:X2}, got 0x{readBack:X2}. Retrying.");
+                    await _ecService.WriteByteAsync(0x95, expectedByte, ct);
+                }
+                else
+                {
+                    OmenSpace.Core.Services.Logger.LogInfo($"[PerformanceMode] EC 0x95 write-back verified: 0x{readBack:X2} OK");
+                }
+            }
+            catch (Exception ex)
+            {
+                OmenSpace.Core.Services.Logger.LogInfo($"[PerformanceMode] EC 0x95 write-back check failed: {ex.Message}");
             }
         }
         else

@@ -60,3 +60,269 @@ Navigating to PerformancePage
 NavFrame navigated
 MainWindow created. Activating
 MainWindow activated
+App Constructor Finished
+OnLaunched Started
+Creating MainWindow
+MainWindow Constructor Start
+InitializeComponent Start
+InitializeComponent End
+ExtendsContentIntoTitleBar = true
+SetTitleBar Start
+SetIcon Start
+Navigating to PerformancePage
+NavFrame navigated
+MainWindow created. Activating
+MainWindow activated
+App Constructor Finished
+OnLaunched Started
+Creating MainWindow
+MainWindow Constructor Start
+InitializeComponent Start
+App Constructor Finished
+OnLaunched Started
+Creating MainWindow
+MainWindow Constructor Start
+InitializeComponent Start
+App Constructor Finished
+OnLaunched Started
+Creating MainWindow
+MainWindow Constructor Start
+InitializeComponent Start
+App Constructor Finished
+OnLaunched Started
+Creating MainWindow
+MainWindow Constructor Start
+InitializeComponent Start
+App Constructor Finished
+OnLaunched Started
+Creating MainWindow
+MainWindow Constructor Start
+InitializeComponent Start
+App Constructor Finished
+OnLaunched Started
+Creating MainWindow
+MainWindow Constructor Start
+InitializeComponent Start
+App Constructor Finished
+OnLaunched Started
+Creating MainWindow
+MainWindow Constructor Start
+InitializeComponent Start
+App Constructor Finished
+OnLaunched Started
+Creating MainWindow
+MainWindow Constructor Start
+InitializeComponent Start
+App Constructor Finished
+OnLaunched Started
+Creating MainWindow
+MainWindow Constructor Start
+InitializeComponent Start
+App Constructor Finished
+OnLaunched Started
+Creating MainWindow
+MainWindow Constructor Start
+InitializeComponent Start
+InitializeComponent End
+ExtendsContentIntoTitleBar = true
+SetTitleBar Start
+SetIcon Start
+Navigating to PerformancePage
+NavFrame navigated
+MainWindow created. Activating
+MainWindow activated
+App Constructor Finished
+OnLaunched Started
+Creating MainWindow
+MainWindow Constructor Start
+InitializeComponent Start
+InitializeComponent End
+ExtendsContentIntoTitleBar = true
+SetTitleBar Start
+SetIcon Start
+Navigating to PerformancePage
+NavFrame navigated
+MainWindow created. Activating
+MainWindow activated
+App Constructor Finished
+OnLaunched Started
+Creating MainWindow
+MainWindow Constructor Start
+InitializeComponent Start
+InitializeComponent End
+ExtendsContentIntoTitleBar = true
+SetTitleBar Start
+SetIcon Start
+Navigating to PerformancePage
+NavFrame navigated
+MainWindow created. Activating
+MainWindow activated
+App Constructor Finished
+OnLaunched Started
+Creating MainWindow
+MainWindow Constructor Start
+InitializeComponent Start
+InitializeComponent End
+ExtendsContentIntoTitleBar = true
+SetTitleBar Start
+SetIcon Start
+Navigating to PerformancePage
+NavFrame navigated
+MainWindow created. Activating
+MainWindow activated
+App Constructor Finished
+OnLaunched Started
+Creating MainWindow
+MainWindow Constructor Start
+InitializeComponent Start
+InitializeComponent End
+ExtendsContentIntoTitleBar = true
+SetTitleBar Start
+SetIcon Start
+Navigating to PerformancePage
+NavFrame navigated
+MainWindow created. Activating
+MainWindow activated
+App Constructor Finished
+OnLaunched Started
+Creating MainWindow
+MainWindow Constructor Start
+InitializeComponent Start
+InitializeComponent End
+ExtendsContentIntoTitleBar = true
+SetTitleBar Start
+SetIcon Start
+Navigating to PerformancePage
+NavFrame navigated
+MainWindow created. Activating
+MainWindow activated
+App Constructor Finished
+OnLaunched Started
+Creating MainWindow
+MainWindow Constructor Start
+InitializeComponent Start
+InitializeComponent End
+ExtendsContentIntoTitleBar = true
+SetTitleBar Start
+SetIcon Start
+Navigating to PerformancePage
+NavFrame navigated
+MainWindow created. Activating
+MainWindow activated
+App Constructor Finished
+OnLaunched Started
+Creating MainWindow
+MainWindow Constructor Start
+InitializeComponent Start
+InitializeComponent End
+ExtendsContentIntoTitleBar = true
+SetTitleBar Start
+SetIcon Start
+Navigating to PerformancePage
+NavFrame navigated
+MainWindow created. Activating
+MainWindow activated
+App Constructor Finished
+OnLaunched Started
+Creating MainWindow
+MainWindow Constructor Start
+InitializeComponent Start
+InitializeComponent End
+ExtendsContentIntoTitleBar = true
+SetTitleBar Start
+SetIcon Start
+Navigating to PerformancePage
+NavFrame navigated
+MainWindow created. Activating
+MainWindow activated
+App Constructor Finished
+OnLaunched Started
+Creating MainWindow
+MainWindow Constructor Start
+InitializeComponent Start
+InitializeComponent End
+ExtendsContentIntoTitleBar = true
+SetTitleBar Start
+SetIcon Start
+Navigating to PerformancePage
+NavFrame navigated
+MainWindow created. Activating
+MainWindow activated
+App Constructor Finished
+OnLaunched Started
+Creating MainWindow
+MainWindow Constructor Start
+InitializeComponent Start
+InitializeComponent End
+ExtendsContentIntoTitleBar = true
+SetTitleBar Start
+SetIcon Start
+Navigating to PerformancePage
+NavFrame navigated
+MainWindow created. Activating
+MainWindow activated
+App Constructor Finished
+OnLaunched Started
+Creating MainWindow
+MainWindow Constructor Start
+InitializeComponent Start
+InitializeComponent End
+ExtendsContentIntoTitleBar = true
+SetTitleBar Start
+SetIcon Start
+Navigating to PerformancePage
+NavFrame navigated
+MainWindow created. Activating
+MainWindow activated
+App Constructor Finished
+OnLaunched Started
+Creating MainWindow
+MainWindow Constructor Start
+InitializeComponent Start
+InitializeComponent End
+ExtendsContentIntoTitleBar = true
+SetTitleBar Start
+SetIcon Start
+Navigating to PerformancePage
+NavFrame navigated
+MainWindow created. Activating
+MainWindow activated
+App Constructor Finished
+OnLaunched Started
+Creating MainWindow
+MainWindow Constructor Start
+InitializeComponent Start
+InitializeComponent End
+ExtendsContentIntoTitleBar = true
+SetTitleBar Start
+SetIcon Start
+Navigating to PerformancePage
+NavFrame navigated
+MainWindow created. Activating
+MainWindow activated
+App Constructor Finished
+OnLaunched Started
+Creating MainWindow
+MainWindow Constructor Start
+InitializeComponent Start
+InitializeComponent End
+ExtendsContentIntoTitleBar = true
+SetTitleBar Start
+SetIcon Start
+Navigating to PerformancePage
+NavFrame navigated
+MainWindow created. Activating
+MainWindow activated
+App Constructor Finished
+OnLaunched Started
+Creating MainWindow
+MainWindow Constructor Start
+InitializeComponent Start
+InitializeComponent End
+ExtendsContentIntoTitleBar = true
+SetTitleBar Start
+SetIcon Start
+Navigating to PerformancePage
+NavFrame navigated
+MainWindow created. Activating
+MainWindow activated

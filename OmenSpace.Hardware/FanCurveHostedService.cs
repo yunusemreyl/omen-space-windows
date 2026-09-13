@@ -280,6 +280,22 @@ public class FanCurveHostedService : BackgroundService, IFanCurveService
                     rawCpuTemp = await _fanControlService.GetCpuTemperatureAsync(stoppingToken);
                 }
 
+                // Temperature sanity check
+                // Reject obviously invalid values from EC registers on wrong-layout boards.
+                // Valid range: 10C to 115C. Out-of-range values (e.g. 0C, 128C, 192C)
+                // indicate EC register misread -- use last known good value instead.
+                // Source: LinuxEcController.GetCpuTemperature / GetGpuTemperature sanity (OmenCore 4.2.0)
+                if (rawCpuTemp != 0 && !EcService.IsValidTemperatureCelsius((int)rawCpuTemp))
+                {
+                    OmenSpace.Core.Services.Logger.LogInfo($"[FanCurve] CPU temp sanity fail: {rawCpuTemp}C is out-of-range (10-115C). Using last smoothed value.");
+                    rawCpuTemp = double.IsNaN(_smoothedCpuTemp) ? 50f : (float)_smoothedCpuTemp;
+                }
+                if (rawGpuTemp != 0 && !EcService.IsValidTemperatureCelsius((int)rawGpuTemp))
+                {
+                    OmenSpace.Core.Services.Logger.LogInfo($"[FanCurve] GPU temp sanity fail: {rawGpuTemp}C is out-of-range (10-115C). Using last smoothed value.");
+                    rawGpuTemp = double.IsNaN(_smoothedGpuTemp) ? 50f : (float)_smoothedGpuTemp;
+                }
+
                 float maxRawTemp = Math.Max(rawCpuTemp, rawGpuTemp);
 
                 // ── THERMAL SAFETY (emergency override) ─────────────────

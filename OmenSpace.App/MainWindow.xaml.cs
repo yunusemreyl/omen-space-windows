@@ -28,7 +28,7 @@ public sealed partial class MainWindow : Window
             SetTitleBar(AppTitleBar);
 
             System.IO.File.AppendAllText(@"C:\Users\victus\Documents\omen-space-windows\trace.txt", "SetIcon Start\n");
-            AppWindow.SetIcon("icons/omen-spaceicon.png");
+            AppWindow.SetIcon("icons\\omen-space.ico");
 
             IntPtr hWnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
             double dpiScale = GetDpiForWindow(hWnd) / 96.0;
@@ -80,6 +80,8 @@ public sealed partial class MainWindow : Window
         double dpiScale = GetDpiForWindow(hWnd) / 96.0;
         int minWidth = (int)(800 * dpiScale);
         int minHeight = (int)(550 * dpiScale);
+
+
 
         if (AppWindow.Size.Width < minWidth || AppWindow.Size.Height < minHeight)
         {

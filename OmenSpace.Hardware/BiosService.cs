@@ -120,8 +120,17 @@ public class BiosService : IBiosService, IDisposable
 
                     if (request.Command == 0x52 && request.InData.Length == 4 && request.InData[1] == 0x00 && returnCode == 0)
                     {
-                        OmenSpace.Core.Services.Logger.LogInfo("[BiosService] MUX mode change command (0x52) successful. Locking WMI buffer until reboot.");
-                        _isMuxChangePending = true;
+                        // Advanced Optimus (InData[0] == 2) does not require a reboot and doesn't corrupt ACPI WMI buffers.
+                        // We only lock WMI for Hybrid (0) and Discrete (1) switches.
+                        if (request.InData[0] != 0x02)
+                        {
+                            OmenSpace.Core.Services.Logger.LogInfo($"[BiosService] MUX mode change command (0x52, mode={request.InData[0]}) successful. Locking WMI buffer until reboot.");
+                            _isMuxChangePending = true;
+                        }
+                        else
+                        {
+                            OmenSpace.Core.Services.Logger.LogInfo("[BiosService] Advanced Optimus mode change command (0x52, mode=2) successful. No WMI lock required.");
+                        }
                     }
 
                     request.Tcs.TrySetResult((returnCode, outData));

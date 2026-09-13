@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using OmenSpace.Core.Models;
@@ -14,6 +14,7 @@ public class KeyboardLightingService
     public KeyboardLightingService(BiosService biosService)
     {
         _biosService = biosService;
+        _hidLightingController = new OmenSpace.Hardware.Lighting.HidLightingController();
     }
 
     public async Task<KeyboardType> DetectKeyboardTypeAsync(CancellationToken ct = default)

@@ -49,17 +49,35 @@ public class EcService : IEcService, IDisposable
     private static readonly Mutex EcMutex = new(false, @"Global\Access_EC");
 
     // Safe allowed list of EC registers for fans/power
+    // Source: OmenCore 4.2.0 field data + LinuxEcController register map
     private static readonly HashSet<ushort> AllowedWriteAddresses = new()
     {
         0x06, 0x11, 0x12, 0x3A, 0x3B, // Victus 8BBE specific fan control registers
         0x2C, 0x2D, 0x2E, 0x2F, 0x34, 0x35, 0x44, 0x45, 0x46,
         0x4A, 0x4B, 0x4C, 0x4D, 0x62, 0x63, 0x95, 0xB0, 0xB1,
-        0xCE, 0xCF, 0xEC, 0xF4, 0x96
+        0xCE, 0xCF, 0xEC, 0xF4, 0x96,
+        // Additional registers from OmenCore Linux field data
+        0x57, // CPU temp read (read-only but kept for completeness)
+        0xBA, // Thermal power limit
+        0xBA, // Thermal power limit
     };
+
+    // Unsafe EC board flag -- set during initialization
+    // Mirrors LinuxEcController.IsUnsafeEcModel (OmenCore 4.2.0)
+    private bool _isUnsafeEcBoard;
 
     public EcService(BoardConfiguration boardConfig)
     {
         _boardConfig = boardConfig;
+        // Detect unsafe EC board from BoardConfiguration + product name
+        // Boards with unsafe EC register layouts must NOT receive direct EC writes.
+        // Source: LinuxEcController.CheckUnsafeEcModel (OmenCore 4.2.0)
+        _isUnsafeEcBoard = !boardConfig.SupportsFanControlEc ||
+                           ModelCapabilityDatabase.IsUnsafeEcBoard(boardConfig.BoardId);
+        if (_isUnsafeEcBoard)
+        {
+            OmenSpace.Core.Services.Logger.LogInfo($"[EC] Board '{boardConfig.BoardId}' is flagged as unsafe EC -- direct register writes disabled.");
+        }
         InitializePawnIO();
     }
 
@@ -203,9 +221,20 @@ public class EcService : IEcService, IDisposable
     public Task WriteByteAsync(byte register, byte value, CancellationToken cancellationToken = default)
     {
         if (!_moduleLoaded) return Task.CompletedTask;
+
+        // Safety gate: block ALL EC writes on boards with unsafe/unknown register layouts.
+        // 2025+ OMEN Max models have different EC maps -- writing legacy addresses causes
+        // EC panic (caps lock blinking). GitHub Issue #60 (OmenCore).
+        // Mirrors: LinuxEcController.WriteByte() IsUnsafeEcModel check
+        if (_isUnsafeEcBoard)
+        {
+            OmenSpace.Core.Services.Logger.LogInfo($"[EC] SAFETY: Write to 0x{register:X2}=0x{value:X2} blocked -- board '{_boardConfig.BoardId}' has unsafe EC layout.");
+            return Task.CompletedTask;
+        }
+
         if (!AllowedWriteAddresses.Contains(register))
         {
-            OmenSpace.Core.Services.Logger.LogInfo($"[EC] Blocked write to 0x{register:X2}");
+            OmenSpace.Core.Services.Logger.LogInfo($"[EC] Blocked write to 0x{register:X2} (not in allowed list)");
             return Task.CompletedTask;
         }
 
@@ -269,6 +298,15 @@ public class EcService : IEcService, IDisposable
         int hr = _pawnioExecute!(_handle, "ioctl_pio_write", input, (IntPtr)2, output, IntPtr.Zero, out _);
         if (hr < 0) throw new InvalidOperationException("PawnIO write failed");
     }
+
+    /// <summary>
+    /// Validates a temperature reading is within plausible range.
+    /// Rejects obviously invalid values from EC registers on wrong-layout boards.
+    /// Valid range: 10C to 115C (beyond TjMax of any current laptop CPU/GPU).
+    /// Source: LinuxEcController.GetCpuTemperature / GetGpuTemperature sanity check (OmenCore 4.2.0)
+    /// </summary>
+    public static bool IsValidTemperatureCelsius(int tempC)
+        => tempC >= 10 && tempC <= 115;
 
     public void Dispose()
     {

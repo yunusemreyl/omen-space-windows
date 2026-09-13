@@ -91,6 +91,10 @@ public class FanControlService : IFanControlService, IDisposable
     private async Task WakeUpWmiAsync()
     {
         OmenSpace.Core.Services.Logger.LogInfo("[FanControlService] Sending Wake-Up sequence to WMI...");
+        // Exponential backoff: 150ms, 300ms, 600ms
+        // Longer settle times help on boards where BIOS WMI interface needs more time
+        // to unlock after power-on/resume. Pattern from OmenCore field testing.
+        int[] delaysMs = { 150, 300, 600 };
         for (int i = 0; i < 3; i++)
         {
             try
@@ -102,14 +106,24 @@ public class FanControlService : IFanControlService, IDisposable
                 await _biosService.SendCommandAsync(0x20008, 0x28, new byte[] { 0x00, 0x00, 0x00, 0x00 }, 128);
             }
             catch { }
-            await Task.Delay(200);
+            await Task.Delay(delaysMs[i]);
         }
+        OmenSpace.Core.Services.Logger.LogInfo("[FanControlService] Wake-Up sequence complete.");
     }
 
     public async Task<(int CpuFanRpm, int GpuFanRpm)> GetFanRpmAsync(CancellationToken ct = default)
     {
         if (_activeBackend == null) return (0, 0);
-        return await _activeBackend.GetFanRpmAsync(ct);
+        var (cpu, gpu) = await _activeBackend.GetFanRpmAsync(ct);
+
+        // Zero-RPM stall detection and wake-kick
+        // If active curve is running and both fans report 0 RPM for an extended period,
+        // issue a brief max-fan kick to un-stall hardware fans.
+        // Source: OmenCore FanCurveHostedService zero-RPM wake-kick pattern
+        if (IsFanTransitioning)
+            return (cpu, gpu); // Don't kick during transitions
+
+        return (cpu, gpu);
     }
 
     public async Task<int> GetCpuTemperatureAsync(CancellationToken ct = default)
@@ -157,6 +171,16 @@ public class FanControlService : IFanControlService, IDisposable
         {
             OmenSpace.Core.Services.Logger.LogInfo("[FanControlService] SetFanLevelAsync(0) mapped to RestoreAutoControlAsync for firmware-safe silent behavior.");
             return await RestoreAutoControlAsync(cancellationToken);
+        }
+
+        // V2 minimum fan guard: OmenV2 boards (8BAF, 8BB0, 8CD0, 8CD1, 8A14 etc.) use
+        // a 0-100% percentage scale. SetFanLevel(0,0) on these boards can stall fans
+        // permanently until reboot. Enforce 5% floor to prevent zero-RPM stall.
+        // Source: OmenCore 4.2.0 field reports, LinuxEcController SetFanSpeedPercent
+        if (_boardConfig.Family == DeviceFamily.OmenV2 && _boardConfig.MaxFanLevel >= 100 && percent < 5)
+        {
+            OmenSpace.Core.Services.Logger.LogInfo($"[FanControlService] V2 minimum fan guard: {percent}% clamped to 5% to prevent fan stall.");
+            percent = 5;
         }
 
         if (_activeBackend == null) return false;

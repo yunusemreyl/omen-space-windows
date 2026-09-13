@@ -69,9 +69,10 @@
                                     <TextBlock Text="GPU Working Mode" FontWeight="SemiBold" FontSize="14" Foreground="{ThemeResource OmenPrimaryTextBrush}"/>
                                     <TextBlock Text="Select GPU operating mode based on your usage. Switching requires restart." FontSize="11" Foreground="{ThemeResource OmenSecondaryTextBrush}" TextWrapping="Wrap"/>
                                 </StackPanel>
-                                <ComboBox x:Name="CmbGpuMode" Grid.Column="2" Width="150" VerticalAlignment="Center" SelectedIndex="0" SelectionChanged="CmbGpuMode_SelectionChanged">
+                                <ComboBox x:Name="CmbGpuMode" Grid.Column="2" Width="180" VerticalAlignment="Center" SelectedIndex="0" SelectionChanged="CmbGpuMode_SelectionChanged">
                                     <ComboBoxItem Content="Hybrid" />
                                     <ComboBoxItem Content="Discrete" />
+                                    <ComboBoxItem x:Name="CmbItemAdvancedOptimus" Content="Advanced Optimus" IsEnabled="False" />
                                 </ComboBox>
                             </Grid>
                             
@@ -95,6 +96,29 @@
                                 </StackPanel>
                             </Grid>
 
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Advanced Optimus Support Card -->
+                    <Border Style="{StaticResource LltCardStyle}" Margin="0,8,0,0">
+                        <StackPanel>
+                            <!-- Advanced Optimus Row -->
+                            <Grid Style="{StaticResource LltRowStyle}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <FontIcon Grid.Column="0" Glyph="&#xEA86;" FontSize="20" Margin="0,0,16,0" Foreground="{ThemeResource OmenSecondaryTextBrush}"/>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,16,0">
+                                    <TextBlock Text="Advanced Optimus (Dynamic Display Switching)" FontWeight="SemiBold" FontSize="14" Foreground="{ThemeResource OmenPrimaryTextBrush}"/>
+                                    <TextBlock Text="Switches between Hybrid and Discrete GPU without rebooting. Requires NVIDIA driver 496+ and HP BIOS support." FontSize="11" Foreground="{ThemeResource OmenSecondaryTextBrush}" TextWrapping="Wrap"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Spacing="6">
+                                    <Ellipse x:Name="AdvancedOptimusDot" Width="8" Height="8" Fill="Gray"/>
+                                    <TextBlock x:Name="AdvancedOptimusStatusText" Text="Detecting..." FontSize="12" Foreground="{ThemeResource OmenPrimaryTextBrush}"/>
+                                </StackPanel>
+                            </Grid>
                         </StackPanel>
                     </Border>
                     

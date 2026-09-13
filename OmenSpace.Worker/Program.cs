@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
@@ -465,10 +465,16 @@ class Program
                         }
                         case "SetGpuMode":
                         {
-                            int mode = root?.ValueKind == JsonValueKind.Number ? root.Value.GetInt32() : 2;
+                            int mode = root?.ValueKind == JsonValueKind.Number ? root.Value.GetInt32() : 0;
                             OmenSpace.Core.Services.Logger.LogInfo($"[Command] SetGpuMode: {(GpuMode)mode}");
-                            await gpuControlService.SetGpuModeAsync((GpuMode)mode);
-                            break;
+                            var (gpuSuccess, rebootRequired) = await gpuControlService.SetGpuModeAsync((GpuMode)mode);
+                            return Results.Ok(new { Success = gpuSuccess, RebootRequired = rebootRequired });
+                        }
+                        case "GetAdvancedOptimusSupport":
+                        {
+                            bool supported = gpuControlService.IsAdvancedOptimusSupported();
+                            OmenSpace.Core.Services.Logger.LogInfo($"[Command] GetAdvancedOptimusSupport: {supported}");
+                            return Results.Ok(new { Success = true, Supported = supported });
                         }
                         case "SetGpuPower":
                         {
@@ -476,6 +482,19 @@ class Program
                             OmenSpace.Core.Services.Logger.LogInfo($"[Command] SetGpuPower: {(GpuPowerLevel)power}");
                             await gpuControlService.SetGpuPowerAsync((GpuPowerLevel)power);
                             break;
+                        }
+                        case "GetDynamicLightingSupport":
+                        {
+                            bool supported = OmenSpace.Hardware.WinLighting.Present;
+                            bool hasControl = OmenSpace.Hardware.WinLighting.HasControl;
+                            return Results.Ok(new { Success = true, Supported = supported, HasControl = hasControl });
+                        }
+                        case "SetDynamicLightingControl":
+                        {
+                            bool windows = root?.ValueKind == JsonValueKind.True;
+                            OmenSpace.Core.Services.Logger.LogInfo($"[Command] SetDynamicLightingControl: {windows}");
+                            OmenSpace.Hardware.WinLighting.SetControl(windows);
+                            return Results.Ok(new { Success = true });
                         }
                         case "SetLighting":
                         {

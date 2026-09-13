@@ -22,10 +22,46 @@ public partial class App : Application
     /// executed, and as such is the logical equivalent of main() or WinMain().
     /// </summary>
     public static Helpers.IpcClient IpcClient = new Helpers.IpcClient();
+    private static System.Diagnostics.Process? _workerProcess;
 
+    private void StartWorker()
+    {
+        try
+        {
+            var existing = System.Diagnostics.Process.GetProcessesByName("OmenSpace.Worker");
+            if (existing.Length > 0) return;
+
+            string exeDir = System.AppContext.BaseDirectory;
+#if DEBUG
+            string workerPath = System.IO.Path.Combine(exeDir, "..", "..", "..", "..", "..", "OmenSpace.Worker", "bin", "Debug", "net10.0-windows10.0.26100.0", "win-x64", "OmenSpace.Worker.exe");
+            if (!System.IO.File.Exists(workerPath))
+                workerPath = System.IO.Path.Combine(exeDir, "worker", "OmenSpace.Worker.exe"); // fallback
+#else
+            string workerPath = System.IO.Path.Combine(exeDir, "worker", "OmenSpace.Worker.exe");
+#endif
+            
+            if (System.IO.File.Exists(workerPath))
+            {
+                var startInfo = new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = workerPath,
+                    UseShellExecute = false,
+                    WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden,
+                    CreateNoWindow = true
+                };
+                _workerProcess = System.Diagnostics.Process.Start(startInfo);
+            }
+        }
+        catch (System.Exception ex)
+        {
+            System.IO.File.AppendAllText(@"C:\Users\victus\Documents\omen-space-windows\crash_dump.txt", "StartWorker Error: " + ex.ToString() + "\n");
+        }
+    }
 
     public App()
     {
+        StartWorker();
+
         // Global Exception Handlers
         this.UnhandledException += (s, e) =>
         {

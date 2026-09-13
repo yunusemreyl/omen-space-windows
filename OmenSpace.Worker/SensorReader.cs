@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using LibreHardwareMonitor.Hardware;
 using OmenSpace.Core.Models;
@@ -35,6 +35,8 @@ public class SensorReader : IDisposable
     private int _gpuFanLastNonZeroRpm = 0;
     private FanRpmState _cpuFanState = FanRpmState.Unknown;
     private FanRpmState _gpuFanState = FanRpmState.Unknown;
+    
+    private System.Diagnostics.PerformanceCounter? _acpiThermalCounter = null;
 
     public SensorReader()
     {
@@ -61,6 +63,39 @@ public class SensorReader : IDisposable
         }
 
         _updateVisitor = new UpdateVisitor();
+        InitAcpiThermalFallback();
+    }
+
+    private void InitAcpiThermalFallback()
+    {
+        try
+        {
+            var cat = new System.Diagnostics.PerformanceCounterCategory("Thermal Zone Information");
+            string[] inst = cat.GetInstanceNames();
+            Array.Sort(inst);
+            double best = 0;
+            foreach (string name in inst)
+            {
+                System.Diagnostics.PerformanceCounter? c = null;
+                try
+                {
+                    c = new System.Diagnostics.PerformanceCounter("Thermal Zone Information", "Temperature", name, true);
+                    double k = c.NextValue();
+                    if (k < 283 || k > 398) { c.Dispose(); continue; } // Not a temperature
+                    if (k <= best) { c.Dispose(); continue; }
+                    if (_acpiThermalCounter != null) _acpiThermalCounter.Dispose();
+                    _acpiThermalCounter = c;
+                    best = k;
+                }
+                catch { c?.Dispose(); }
+            }
+            if (_acpiThermalCounter != null)
+                OmenSpace.Core.Services.Logger.LogInfo($"[SensorReader] ACPI Thermal fallback initialized. Best base temp: {best - 273.15} C");
+        }
+        catch (Exception ex)
+        {
+            OmenSpace.Core.Services.Logger.LogInfo($"[SensorReader] Failed to initialize ACPI Thermal fallback: {ex.Message}");
+        }
     }
 
     private bool IsDiscreteGpuSleeping()
@@ -163,6 +198,19 @@ public class SensorReader : IDisposable
                                   || s.Name.Contains("Board Power", StringComparison.OrdinalIgnoreCase))
                                 ?? ReadSensor(hw, SensorType.Power, _ => true) ?? 0f;
 
+                            // iGPU (APU) genellikle tüm işlemcinin paket gücünü raporlar, bu yüzden 15-20W civarı sabit gözükür.
+                            // Kullanıcıyı yanıltmamak için entegre GPU'nun güç değerini yoksayıyoruz (0 gösteriyoruz).
+                            if (isIntegrated) powerVal = 0f;
+
+                            // Harici NVIDIA GPU uykuya geçtiğinde (Advanced Optimus), LHM eski değerlerini önbellekte tutar (örneğin 16.7W).
+                            // Yanlış gösterimi engellemek için, GPU uykudayken tüm okumalar 0'a zorluyoruz.
+                            if (hw.HardwareType == HardwareType.GpuNvidia && _updateVisitor.IsDiscreteGpuSleeping)
+                            {
+                                tempVal = 0f;
+                                loadVal = 0f;
+                                powerVal = 0f;
+                            }
+
                             // HP Omen dGPUs can report bogus 590W+ when sleeping on iGPU mode
                             if (powerVal > 330f) powerVal = 0f;
 
@@ -185,6 +233,16 @@ public class SensorReader : IDisposable
                         }
                         break;
                 }
+            }
+
+            if (cpuTemp <= 0f && _acpiThermalCounter != null)
+            {
+                try
+                {
+                    double k = _acpiThermalCounter.NextValue();
+                    if (k > 200) cpuTemp = (float)Math.Round(k - 273.15, 1);
+                }
+                catch { }
             }
 
             _hardwareLogged = true;
