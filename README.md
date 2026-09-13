@@ -17,11 +17,17 @@
 
 ## 📸 Screenshots
 
-| Dashboard | Performance & Custom Fan Curves |
-|:---:|:---:|
-| <img src="images/omenspace.png" alt="OmenSpace Dashboard" /> | <img src="images/perf.png" alt="Performance Tab" /> |
-| **GPU Mode** | **Lighting Settings** |
-| <img src="images/mux.png" alt="GPU MUX Switch" /> | <img src="images/light.png" alt="Lighting Configuration" /> |
+**Performance & Custom Fan Curves**
+
+ <img src="images/perf.png" alt="Performance Tab" /> 
+ 
+ **GPU Mode** 
+ 
+ <img src="images/mux.png" alt="GPU MUX Switch" /> 
+
+ **Lighting Settings**
+ 
+ <img src="images/light.png" alt="Lighting Configuration" /> 
 
 ## 🚀 Installation & Build
 
